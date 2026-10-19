@@ -32,6 +32,7 @@ Stratified 5-fold cross-validation, with scaling, encoding, dimensionality reduc
 pip install -r requirements.txt
 pip install -e .
 python -m qmlfin.check_data    # dataset and fold summary
+python -m qmlfin.experiment --dataset german_credit --models lr rf xgboost --regimes full 4 6 8
 pytest
 ```
 

@@ -1,6 +1,7 @@
 seed: 42
 data_dir: data/raw
 results_dir: results
+n_jobs: 1                 # threads for tree ensembles
 
 cv:
   outer_folds: 5
