@@ -1,0 +1,27 @@
+seed: 42
+data_dir: data/raw
+results_dir: results
+
+cv:
+  outer_folds: 5
+  inner_folds: 3          # hyperparameter tuning inside each training fold
+  seeds_per_fold: 3       # for stochastic models (VQC, hybrid QNN, MLP)
+
+qubits: [4, 6, 8]
+angle_range: [0.0, 3.141592653589793]
+
+datasets:
+  german_credit:
+    file: german.data
+  bank_churn:
+    file: Churn_Modelling.csv
+    learning_curve_sizes: [500, 1000, 2000, 4000, 8000]
+  ulb_fraud:
+    file: creditcard.csv
+    train_neg_per_pos: 4  # legitimate:fraud ratio in training folds; test folds keep the natural rate
+
+quantum:
+  device: lightning.qubit  # use lightning.gpu on a GPU node
+
+tuning:
+  n_configs: 20            # same budget for every model
