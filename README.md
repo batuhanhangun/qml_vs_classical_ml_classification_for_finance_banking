@@ -1,6 +1,6 @@
 # Quantum, Hybrid, and Classical ML for Banking Classification
 
-Benchmark of pure quantum, hybrid quantum-classical, and classical machine learning models on three banking classification tasks: credit scoring, customer churn, and fraud detection. The aim is a fair comparison of existing models under matched preprocessing and evaluation, not a new architecture.
+Benchmark of quantum kernel, variational, and hybrid quantum-classical models against classical machine learning on three banking classification tasks: credit scoring, customer churn, and fraud detection. All quantum models run on noiseless statevector simulation, so results represent the ideal-case performance of each circuit at a given qubit count. The aim is a fair comparison of existing models under matched preprocessing and evaluation, not a new architecture.
 
 ## Datasets
 
@@ -12,16 +12,16 @@ Benchmark of pure quantum, hybrid quantum-classical, and classical machine learn
 
 The datasets are not redistributed here; download them from the sources above.
 
-German Credit is used in full. On the churn data, exact QSVC runs on a stratified 2,000-sample subset, and the other models also run on the full set. The fraud experiments keep all 492 fraud cases together with a stratified sample of legitimate transactions.
+German Credit and Bank Churn are used in full by every model. Bank Churn is also used for a learning-curve analysis with stratified training subsets of 500 to 8,000 samples. For fraud detection, legitimate transactions are undersampled in the training folds only; test folds keep the original fraud rate.
 
 ## Models
 
-- **Quantum:** QSVC (fidelity kernel), Pegasos-QSVC, variational quantum classifier (VQC)
+- **Quantum:** QSVC with a fidelity kernel, variational quantum classifier (VQC)
 - **Hybrid:** dressed QNN (classical encoder, variational quantum layer, classical head)
 - **Classical:** logistic regression, SVM (linear and RBF), random forest, XGBoost, LightGBM, MLP
 
-Quantum models use 4, 6, and 8 qubits. Classical baselines are run both on the same reduced features given to the quantum models and on the full feature set.
+Quantum models use 4, 6, and 8 qubits. Classical baselines are run both on the same reduced features given to the quantum models and on the full feature set. All models receive the same hyperparameter tuning budget.
 
 ## Evaluation
 
-Stratified 5-fold cross-validation, with scaling, encoding, dimensionality reduction, and resampling fitted on the training folds only. Reported metrics are ROC-AUC, PR-AUC, F1, recall, specificity, G-mean, and training and inference time.
+Stratified 5-fold cross-validation, with scaling, encoding, dimensionality reduction, and resampling fitted on the training folds only. Stochastic models are run with three seeds per fold. Reported metrics are ROC-AUC, PR-AUC, F1, recall, specificity, G-mean, and recall at fixed false positive rates for fraud. Resource figures include qubit count, circuit depth, two-qubit gate count, trainable parameters, and simulation time.
