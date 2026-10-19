@@ -16,7 +16,7 @@ datasets:
     file: german.data
   bank_churn:
     file: Churn_Modelling.csv
-    learning_curve_sizes: [500, 1000, 2000, 4000, 8000]
+    learning_curve_sizes: [500, 1000, 2000, 4000]  # the full 8,000-sample training fold comes from the main grid
   ulb_fraud:
     file: creditcard.csv
     drop_duplicates: true # removes 1,081 exact duplicate rows (19 frauds)
@@ -29,3 +29,12 @@ torch:                    # shared training schedule for MLP, VQC, hybrid QNN, m
 
 tuning:
   n_configs: 20            # same budget for every model
+
+grid:
+  classical: [lr, svm_linear, svm_rbf, rf, xgboost, lightgbm, mlp]
+  quantum: [qsvc, vqc]
+  hybrid: [hqnn, mlp_matched]
+  learning_curve:
+    dataset: bank_churn
+    models: [lr, svm_rbf, xgboost, mlp, qsvc, vqc, hqnn, mlp_matched]
+    qubits: 8              # classical models use the full feature set

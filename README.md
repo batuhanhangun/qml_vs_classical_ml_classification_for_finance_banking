@@ -36,6 +36,22 @@ python -m qmlfin.experiment --dataset german_credit --models lr rf xgboost --reg
 pytest
 ```
 
+To run the full grid (760 jobs) and build the tables:
+
+```bash
+python -m qmlfin.grid --list
+python -m qmlfin.grid --run-all       # sequential; finished jobs are skipped
+python -m qmlfin.report               # tables and statistical tests in results/tables/
+```
+
+On NERSC Perlmutter, the grid runs as two Slurm job arrays, one for CPU models and one for GPU models:
+
+```bash
+mkdir -p logs
+sbatch --array=0-419%60 slurm/perlmutter_cpu.sh
+sbatch --array=0-339%40 slurm/perlmutter_gpu.sh
+```
+
 The code runs on CPU by default. On a GPU machine, set `torch.device` to `cuda` in `configs/default.yaml`.
 
 Quantum circuits are simulated exactly with a batched statevector simulator written in PyTorch (`src/qmlfin/quantum/sim.py`). The tests check it against PennyLane, which is also used to count circuit depth and two-qubit gates.
