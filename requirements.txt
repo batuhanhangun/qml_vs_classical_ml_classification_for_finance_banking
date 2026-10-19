@@ -6,6 +6,5 @@ xgboost>=2.0
 lightgbm>=4.3
 torch>=2.2
 pennylane>=0.38
-pennylane-lightning>=0.38
 pyyaml>=6.0
 pytest>=8.0

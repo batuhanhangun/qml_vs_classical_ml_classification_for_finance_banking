@@ -17,7 +17,7 @@ German Credit and Bank Churn are used in full by every model. Bank Churn is also
 ## Models
 
 - **Quantum:** QSVC with a fidelity kernel, variational quantum classifier (VQC)
-- **Hybrid:** dressed QNN (classical encoder, variational quantum layer, classical head)
+- **Hybrid:** dressed QNN (classical encoder, variational quantum layer, classical head), compared with an MLP of matched size
 - **Classical:** logistic regression, SVM (linear and RBF), random forest, XGBoost, LightGBM, MLP
 
 Quantum models use 4, 6, and 8 qubits. Classical baselines are run both on the same reduced features given to the quantum models and on the full feature set. All models receive the same hyperparameter tuning budget.
@@ -36,4 +36,6 @@ python -m qmlfin.experiment --dataset german_credit --models lr rf xgboost --reg
 pytest
 ```
 
-The code runs on CPU by default. On a GPU machine, set `quantum.device` to `lightning.gpu` in `configs/default.yaml` and install `pennylane-lightning-gpu`.
+The code runs on CPU by default. On a GPU machine, set `torch.device` to `cuda` in `configs/default.yaml`.
+
+Quantum circuits are simulated exactly with a batched statevector simulator written in PyTorch (`src/qmlfin/quantum/sim.py`). The tests check it against PennyLane, which is also used to count circuit depth and two-qubit gates.

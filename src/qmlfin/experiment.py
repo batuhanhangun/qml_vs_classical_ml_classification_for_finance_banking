@@ -16,7 +16,7 @@ from sklearn.pipeline import Pipeline
 
 from qmlfin import data, splits
 from qmlfin.metrics import evaluate
-from qmlfin.models import classical
+from qmlfin.models import registry
 from qmlfin.preprocess import make_preprocessor
 from qmlfin.tuning import fit, scores, tune
 
@@ -62,14 +62,25 @@ def run_fold(cfg, dataset, model, regime, fold, seed, train_size=None):
         tr = sub
 
     n = None if regime == "full" else int(regime)
-    pre = make_preprocessor(ds.cat_cols, ds.num_cols, n_components=n,
-                            angle_range=None if n is None else cfg["angle_range"], seed=cfg["seed"])
-    pipe = Pipeline([("pre", pre), ("clf", classical.build(model, seed, cfg.get("n_jobs", 1)))])
+    kind = registry.MODELS[model]["input"]
+    if n is None and kind != "any":
+        raise ValueError(f"{model} needs a qubit count as its regime")
+    if kind == "full":  # trainable encoder sees the full standardised feature set
+        pre = make_preprocessor(ds.cat_cols, ds.num_cols, seed=cfg["seed"])
+    else:
+        pre = make_preprocessor(ds.cat_cols, ds.num_cols, n_components=n,
+                                angle_range=None if n is None else cfg["angle_range"], seed=cfg["seed"])
+    clf = registry.build(model, seed, n, cfg.get("n_jobs", 1))
+    torch_opts = {k: v for k, v in cfg.get("torch", {}).items() if k in clf.get_params()}
+    if "device" in clf.get_params():
+        torch_opts["device"] = cfg.get("torch", {}).get("device", "cpu")
+    clf.set_params(**torch_opts)
+    pipe = Pipeline([("pre", pre), ("clf", clf)])
 
     Xtr, ytr, Xte, yte = ds.X.iloc[tr], ds.y[tr], ds.X.iloc[te], ds.y[te]
     key = (dataset, model, regime, fold, train_size)
     if key not in _TUNED:  # tune once per fold; seeds only vary the final training run
-        _TUNED[key] = tune(pipe, classical.SEARCH_SPACES[model], Xtr, ytr, weight,
+        _TUNED[key] = tune(pipe, registry.SEARCH_SPACES[model], Xtr, ytr, weight,
                            cfg["tuning"]["n_configs"], cfg["cv"]["inner_folds"], cfg["seed"] + fold)
     params, threshold, inner_ap = _TUNED[key]
     pipe.set_params(**{f"clf__{k}": v for k, v in params.items()})
@@ -81,6 +92,11 @@ def run_fold(cfg, dataset, model, regime, fold, seed, train_size=None):
     s = scores(pipe, Xte)
     predict_ms = 1000 * (time.perf_counter() - t0) / len(te)
 
+    extra = pipe[-1].resources() if hasattr(pipe[-1], "resources") else {}
+    if model == "qsvc":  # kernel entries a device would estimate: training Gram matrix and test-vs-support
+        n_sv = len(pipe[-1].sv_states_)
+        extra["kernel_evaluations"] = len(tr) * (len(tr) - 1) // 2 + len(te) * n_sv
+
     return {
         "dataset": dataset, "model": model, "regime": regime, "fold": fold, "seed": seed,
         "train_size": len(tr), "test_size": len(te),
@@ -88,7 +104,7 @@ def run_fold(cfg, dataset, model, regime, fold, seed, train_size=None):
         "inner_pr_auc": inner_ap, "threshold": float(threshold),
         **evaluate(yte, s, threshold),
         "fit_time_s": fit_time, "predict_ms_per_sample": predict_ms,
-        "n_parameters": n_parameters(pipe[-1]),
+        "n_parameters": n_parameters(pipe[-1]), **extra,
     }
 
 
@@ -112,7 +128,7 @@ def main():
     out.parent.mkdir(parents=True, exist_ok=True)
 
     for model in args.models:
-        n_seeds = cfg["cv"]["seeds_per_fold"] if model in classical.STOCHASTIC else 1
+        n_seeds = cfg["cv"]["seeds_per_fold"] if registry.MODELS[model]["stochastic"] else 1
         for regime in args.regimes:
             for fold in folds:
                 for seed in range(n_seeds):

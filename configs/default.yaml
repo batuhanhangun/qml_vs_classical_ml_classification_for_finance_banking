@@ -22,8 +22,10 @@ datasets:
     drop_duplicates: true # removes 1,081 exact duplicate rows (19 frauds)
     train_neg_per_pos: 4  # legitimate:fraud ratio in training folds; test folds keep the natural rate
 
-quantum:
-  device: lightning.qubit  # use lightning.gpu on a GPU node
+torch:                    # shared training schedule for MLP, VQC, hybrid QNN, matched MLP; also runs QSVC kernels
+  epochs: 30
+  batch_size: 128
+  device: cpu              # cuda on a GPU node
 
 tuning:
   n_configs: 20            # same budget for every model
