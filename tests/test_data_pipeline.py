@@ -104,3 +104,10 @@ def test_preprocessor_fitted_on_train_only(raw_dir):
     scaler = pre.named_steps["standardise"]
     encoded_train = pre.named_steps["encode"].transform(ds.X.iloc[tr])
     np.testing.assert_allclose(scaler.mean_, encoded_train.mean(axis=0))
+
+
+def test_ulb_duplicates_dropped(raw_dir):
+    df = pd.read_csv(raw_dir / "creditcard.csv")
+    pd.concat([df, df.iloc[:10]]).to_csv(raw_dir / "creditcard.csv", index=False)
+    assert len(data.load("ulb_fraud", raw_dir).y) == 5000
+    assert len(data.load("ulb_fraud", raw_dir, drop_duplicates=False).y) == 5010

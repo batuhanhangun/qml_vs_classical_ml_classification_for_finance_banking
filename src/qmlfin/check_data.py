@@ -14,7 +14,8 @@ def main():
     cfg = yaml.safe_load(open(parser.parse_args().config))
 
     for name, dcfg in cfg["datasets"].items():
-        ds = data.load(name, cfg["data_dir"])
+        opts = {k: dcfg[k] for k in ("drop_duplicates",) if k in dcfg}
+        ds = data.load(name, cfg["data_dir"], **opts)
         print(f"\n{name}: {len(ds.y)} samples, {ds.X.shape[1]} features, {ds.y.sum()} positives ({ds.y.mean():.2%})")
         for k, (tr, te) in enumerate(splits.outer_folds(ds.y, cfg["cv"]["outer_folds"], cfg["seed"])):
             if "train_neg_per_pos" in dcfg:

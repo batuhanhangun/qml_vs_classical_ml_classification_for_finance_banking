@@ -47,9 +47,11 @@ def load_bank_churn(data_dir) -> Dataset:
     return Dataset("bank_churn", df[cat_cols + num_cols], y, cat_cols, num_cols)
 
 
-def load_ulb_fraud(data_dir) -> Dataset:
+def load_ulb_fraud(data_dir, drop_duplicates=True) -> Dataset:
     path = _require(Path(data_dir) / "creditcard.csv", "ulb_fraud")
     df = pd.read_csv(path)
+    if drop_duplicates:  # exact duplicate rows would otherwise appear in both training and test folds
+        df = df.drop_duplicates().reset_index(drop=True)
     num_cols = [c for c in df.columns if c != "Class"]
     y = df["Class"].astype(int).to_numpy()
     return Dataset("ulb_fraud", df[num_cols], y, [], num_cols)
@@ -62,5 +64,5 @@ LOADERS = {
 }
 
 
-def load(name: str, data_dir) -> Dataset:
-    return LOADERS[name](data_dir)
+def load(name: str, data_dir, **options) -> Dataset:
+    return LOADERS[name](data_dir, **options)
