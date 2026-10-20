@@ -7,9 +7,10 @@
 #SBATCH -c 8
 #SBATCH -J qmlfin-sklearn
 #SBATCH -o logs/%x-%A_%a.out
-# Scikit-learn models (420 jobs). From the repository root:
+# Scikit-learn models (420 jobs). Runs inside a podman-hpc container (set IMAGE to override). From the repository root:
 #   mkdir -p logs && sbatch --array=0-419%60 slurm/perlmutter_cpu.sh
 
-module load pytorch
+IMAGE=${IMAGE:-quantum_ml:latest}
 cd "$SLURM_SUBMIT_DIR"
-python -m qmlfin.grid --group sklearn --task-id "$SLURM_ARRAY_TASK_ID" --n-jobs 8
+podman-hpc run --rm -v "$PWD":/work -w /work -e PYTHONPATH=/work/src "$IMAGE" \
+    python -m qmlfin.grid --group sklearn --task-id "$SLURM_ARRAY_TASK_ID" --n-jobs 8
