@@ -11,7 +11,7 @@
 # PyTorch and quantum models (340 jobs). Runs inside a podman-hpc container (set IMAGE to override). From the repository root:
 #   mkdir -p logs && sbatch --array=0-339%40 slurm/perlmutter_gpu.sh
 
-IMAGE=${IMAGE:-quantum_ml:latest}
+IMAGE=${IMAGE:-localhost/quantum_ml:v4}
 cd "$SLURM_SUBMIT_DIR"
 podman-hpc run --rm --gpu -v "$PWD":/work -w /work -e PYTHONPATH=/work/src "$IMAGE" \
     python -m qmlfin.grid --group torch --task-id "$SLURM_ARRAY_TASK_ID" --device cuda
