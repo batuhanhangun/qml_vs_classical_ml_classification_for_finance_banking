@@ -44,12 +44,12 @@ python -m qmlfin.grid --run-all       # sequential; finished jobs are skipped
 python -m qmlfin.report               # tables and statistical tests in results/tables/
 ```
 
-On NERSC Perlmutter, the grid runs as two Slurm job arrays, one for CPU models and one for GPU models:
+On NERSC Perlmutter, the grid runs as two Slurm job arrays on CPU nodes (a GPU script is also provided):
 
 ```bash
 mkdir -p logs
 sbatch --array=0-419%60 slurm/perlmutter_cpu.sh
-sbatch --array=0-339%40 slurm/perlmutter_gpu.sh
+GROUP=torch sbatch --array=0-339%60 slurm/perlmutter_cpu.sh
 ```
 
 The code runs on CPU by default. On a GPU machine, set `torch.device` to `cuda` in `configs/default.yaml`.
